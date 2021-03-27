@@ -76,7 +76,7 @@ class Extractor:
                 self._data[self.website]['data'][platform] = {}
             for src in data[platform]:
                 if not self._data[self.website]['data'][platform].get(src):
-                    self._data['data'][platform][src] = {}
+                    self._data[self.website]['data'][platform][src] = {}
                 if data[platform][src]:
                     self._data[self.website]['data'][platform][src].update(data[platform][src])
         self._emails[self.website].extend([Email(email, url) for email in filtered_emails])
