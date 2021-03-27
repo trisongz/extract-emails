@@ -110,7 +110,7 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
                     if findall:
                         for x, item in enumerate(findall):
                             item = [i for i in item if i]
-                            res[platform][src][d] = {vals[n]: i for n, i in enumerate(item)}
+                            res[platform][src][d] = {keys[n]: i for n, i in enumerate(item)}
         
         return res
         
