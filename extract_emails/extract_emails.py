@@ -67,7 +67,7 @@ class Extractor:
 
     def _get_data(self, url: str):
         page_source = self.browser.get_page_source(url)
-        srcdata = self.html_handler.get_data(page_source)
+        srcdata = self.html_handler.full_extraction(page_source)
         email, data, links = srcdata['emails'], srcdata['data'], srcdata['links']
         filtered_emails = self.emails_filter[self.website].filter(email)
         self._data[self.website]['emails'].update({email: url for email in filtered_emails})
