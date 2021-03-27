@@ -109,7 +109,7 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
                     findall = re.findall(regex, d)
                     if findall:
                         for x, item in enumerate(findall):
-                            item = [i for i in item if i]
+                            item = [i for i in item if i] if isinstance(item, list) else [item]
                             res[platform][src][d] = {keys[n]: i for n, i in enumerate(item)}
         
         return res
