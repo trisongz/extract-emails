@@ -44,11 +44,38 @@ class EmailExtractor:
         self._links: List[str] = [self.website]
         self._checked_links: List[str] = []
         self._emails: List[Email] = []
+        self._data: {'emails': {}, 'data': {}}
         self._current_depth: int = 0
 
         self.html_handler = DefaultHTMLHandler()
         self.links_filter = FILTERS[link_filter](self.website, **kwargs)
         self.emails_filter = DefaultEmailFilter()
+
+    def get_data(self):
+        urls = self._get_urls()
+        self._current_depth += 1
+        if not len(urls) or self._current_depth > self.depth:
+            return self._data
+
+        for url in urls:
+            self._get_data(url)
+        return self.get_data()
+
+    def _get_data(self, url: str):
+        page_source = self.browser.get_page_source(url)
+        srcdata = self.html_handler.get_data(page_source)
+        email, data, links = srcdata['emails'], srcdata['data'], srcdata['links']
+        filtered_emails = self.emails_filter.filter(email)
+        self._data['emails'].update({email: url for email in filtered_emails})
+        self._data['data'].update(data)
+        self._emails.extend([Email(email, url) for email in filtered_emails])
+        filtered_links = self.links_filter.filter(links)
+        if self.max_links_from_page != -1:
+            filtered_links = filtered_links[: self.max_links_from_page]
+        for fl in filtered_links:
+            if fl not in self._checked_links:
+                self._checked_links.append(fl)
+                self._links.append(fl)
 
     def get_emails(self) -> List[Email]:
         """Extract emails from webpages
