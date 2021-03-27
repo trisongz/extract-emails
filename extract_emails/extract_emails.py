@@ -42,6 +42,10 @@ class Extractor:
         self._allweburls.add(self.website)
         self._idx += 1
 
+    @property
+    def results(self):
+        return self._data
+
     def process(self, website_url):
         if website_url not in self._allweburls:
             self.config_url(website_url)
@@ -60,7 +64,7 @@ class Extractor:
         urls = self._get_urls()
         self._current_depth += 1
         if not len(urls) or self._current_depth > self.depth:
-            return self._data
+            return self._data[self.website]
         for url in urls:
             self._get_data(url)
         return self.get_data()
