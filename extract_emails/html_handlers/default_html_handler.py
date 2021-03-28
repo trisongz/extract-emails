@@ -3,6 +3,8 @@ import sys
 import threading
 from typing import List
 from extractnet import Extractor
+import logging
+logging.getLogger("extractnet").setLevel(logging.ERROR)
 
 from .html_handler_interface import HTMLHandlerInterface
 # https://github.com/lorey/social-media-profiles-regexs/blob/master/regexes.json
@@ -116,7 +118,8 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
             try:
                 res['data'] = self.extractor.extract(page_source)
             except Exception as e:
-                print(str(e), page_source)
+                print(str(e))
+                #print(str(e), page_source)
         return res
 
     def get_data(self, page_source):
