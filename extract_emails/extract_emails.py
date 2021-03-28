@@ -12,11 +12,12 @@ FILTERS = {0: DefaultLinkFilter, 1: ContactInfoLinkFilter}
 
 
 class DataExtractor:
-    def __init__(self, browser: Type[BrowserInterface], depth: int = 10, max_links_from_page: int = -1, link_filter: int = 0, **kwargs):
+    def __init__(self, browser: Type[BrowserInterface], depth: int = 10, max_links_from_page: int = -1, link_filter: int = 0, return_base=True, **kwargs):
         self.browser = browser
         self.depth = depth
         self.max_links_from_page = max_links_from_page
         self._linkfilter = link_filter
+        self._return_base = return_base
         self._kwargs = kwargs
         self._allweburls = set()
         self._links = {}
@@ -49,6 +50,8 @@ class DataExtractor:
         if website_url not in self._allweburls:
             self.config_url(website_url)
             return self.get_data()
+        if self._return_base:
+            return {'base': website_url, 'data': self._data[website_url]}
         return self._data[website_url]
 
     def process_batch(self, website_list):
@@ -57,13 +60,18 @@ class DataExtractor:
                 self.config_url(website_url)
                 yield self.get_data()
             else:
-                yield self._data[website_url]
+                if self._return_base:
+                    yield {'base': website_url, 'data': self._data[website_url]}
+                else:
+                    yield self._data[website_url]
 
     def get_data(self):
         urls = self._get_urls()
         self._current_depth += 1
         if not len(urls) or self._current_depth > self.depth:
             self._data[self.website]['links'] = self._checked_links[self.website]
+            if self._return_base:
+                return {'base': self.website, 'data': self._data[self.website]}
             return self._data[self.website]
         for url in urls:
             self._get_data(url)
