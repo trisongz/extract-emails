@@ -1,4 +1,5 @@
 import re
+import sys
 import threading
 from typing import List
 from extractnet import Extractor
@@ -109,8 +110,14 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
             'emails': self.email_pattern.findall(page_source),
             'links': self.get_links(page_source),
             'socials': self.get_data(page_source),
-            'data': self.extractor.extract(page_source, metadata_mining=False)
+            'data': '',
         }
+        try:
+            res['data'] = self.extractor.extract(page_source)
+        except Exception as e:
+            print(str(e))
+            print(page_source)
+            sys.exit()
         return res
 
     def get_data(self, page_source):

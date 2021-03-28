@@ -31,7 +31,6 @@ class DataExtractor:
     
     def config_url(self, website_url):
         self.website = website_url
-        print(f'On {self._idx}: {self.website}')
         self.emails_filter[self.website] = DefaultEmailFilter()
         self._links[self.website] = [self.website]
         self._checked_links[self.website] = []
