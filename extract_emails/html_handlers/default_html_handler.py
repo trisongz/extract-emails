@@ -1,5 +1,7 @@
-from typing import List
 import re
+import threading
+from typing import List
+from extractnet import Extractor
 
 from .html_handler_interface import HTMLHandlerInterface
 # https://github.com/lorey/social-media-profiles-regexs/blob/master/regexes.json
@@ -79,6 +81,20 @@ _patterns = {
     }
 }
 
+_extractor = None
+_extractor_lock = threading.Lock()
+
+def config_extractor():
+    global _extractor
+    if _extractor:
+        return
+    _extractor = Extractor()
+
+def get_extractor():
+    config_extractor()
+    return _extractor
+
+
 class DefaultHTMLHandler(HTMLHandlerInterface):
     def __init__(self):
         # regexp source: https://emailregex.com/
@@ -86,12 +102,14 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
             r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"""
         )
         self.link_pattern = re.compile(r'<a\s+(?:[^>]*?\s+)?href=(["\'])(.*?)\1')
+        self.extractor = get_extractor()
     
     def full_extraction(self, page_source: str):
         res = {
             'emails': self.email_pattern.findall(page_source),
             'links': self.get_links(page_source),
-            'data': self.get_data(page_source)
+            'socials': self.get_data(page_source),
+            'data': self.extractor.extract(page_source, metadata_mining=False)
         }
         return res
 
@@ -109,7 +127,7 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
                     findall = re.findall(regex, d)
                     if findall:
                         for x, item in enumerate(findall):
-                            item = [i for i in item if i] if isinstance(item, list) else [item]
+                            item = [i for i in item if i] if not isinstance(item, str) else [item]
                             res[platform][src][d] = {keys[n]: i for n, i in enumerate(item)}
         
         return res

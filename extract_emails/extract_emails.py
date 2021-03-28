@@ -11,7 +11,7 @@ from extract_emails.link_filters import DefaultLinkFilter, ContactInfoLinkFilter
 FILTERS = {0: DefaultLinkFilter, 1: ContactInfoLinkFilter}
 
 
-class Extractor:
+class DataExtractor:
     def __init__(self, browser: Type[BrowserInterface], depth: int = 10, max_links_from_page: int = -1, link_filter: int = 0, **kwargs):
         self.browser = browser
         self.depth = depth
@@ -36,7 +36,7 @@ class Extractor:
         self._links[self.website] = [self.website]
         self._checked_links[self.website] = []
         self._emails[self.website] = []
-        self._data[self.website] = {'emails': {}, 'data': {}}
+        self._data[self.website] = {'emails': {}, 'socials': {}, 'data': {}, 'links': []}
         self._current_depth = 0
         self.links_filter[self.website] = FILTERS[self._linkfilter](self.website, **self._kwargs)
         self._allweburls.add(self.website)
@@ -64,6 +64,7 @@ class Extractor:
         urls = self._get_urls()
         self._current_depth += 1
         if not len(urls) or self._current_depth > self.depth:
+            self._data[self.website]['links'] = self._checked_links[self.website]
             return self._data[self.website]
         for url in urls:
             self._get_data(url)
@@ -72,17 +73,18 @@ class Extractor:
     def _get_data(self, url: str):
         page_source = self.browser.get_page_source(url)
         srcdata = self.html_handler.full_extraction(page_source)
-        email, data, links = srcdata['emails'], srcdata['data'], srcdata['links']
+        email, socials, links, data = srcdata['emails'], srcdata['socials'], srcdata['links'], srcdata['data']
+        self._data[self.website]['data'][url] = data
         filtered_emails = self.emails_filter[self.website].filter(email)
         self._data[self.website]['emails'].update({email: url for email in filtered_emails})
-        for platform in data:
-            if not self._data[self.website]['data'].get(platform):
-                self._data[self.website]['data'][platform] = {}
-            for src in data[platform]:
-                if not self._data[self.website]['data'][platform].get(src):
-                    self._data[self.website]['data'][platform][src] = {}
-                if data[platform][src]:
-                    self._data[self.website]['data'][platform][src].update(data[platform][src])
+        for platform in socials:
+            if not self._data[self.website]['socials'].get(platform):
+                self._data[self.website]['socials'][platform] = {}
+            for src in socials[platform]:
+                if not self._data[self.website]['socials'][platform].get(src):
+                    self._data[self.website]['socials'][platform][src] = {}
+                if socials[platform][src]:
+                    self._data[self.website]['socials'][platform][src].update(data[platform][src])
         self._emails[self.website].extend([Email(email, url) for email in filtered_emails])
         filtered_links = self.links_filter[self.website].filter(links)
         if self.max_links_from_page != -1:
