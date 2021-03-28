@@ -112,12 +112,13 @@ class DefaultHTMLHandler(HTMLHandlerInterface):
             'socials': self.get_data(page_source),
             'data': '',
         }
-        try:
-            res['data'] = self.extractor.extract(page_source)
-        except Exception as e:
-            print(str(e))
-            print(page_source)
-            sys.exit()
+        if page_source:
+            try:
+                res['data'] = self.extractor.extract(page_source)
+            except Exception as e:
+                print(str(e))
+                print(page_source)
+                sys.exit()
         return res
 
     def get_data(self, page_source):
