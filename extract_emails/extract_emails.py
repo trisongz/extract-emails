@@ -83,7 +83,7 @@ class DataExtractor:
                 if not self._data[self.website]['socials'][platform].get(src):
                     self._data[self.website]['socials'][platform][src] = {}
                 if socials[platform][src]:
-                    self._data[self.website]['socials'][platform][src].update(data[platform][src])
+                    self._data[self.website]['socials'][platform][src].update(socials[platform][src])
         self._emails[self.website].extend([Email(email, url) for email in filtered_emails])
         filtered_links = self.links_filter[self.website].filter(links)
         if self.max_links_from_page != -1:
